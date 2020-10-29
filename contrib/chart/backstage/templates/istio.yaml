@@ -1,0 +1,71 @@
+{{- $frontendUrl := urlParse .Values.appConfig.app.baseUrl}}
+{{- $backendUrl := urlParse .Values.appConfig.backend.baseUrl}}
+{{- $lighthouseUrl := urlParse .Values.appConfig.lighthouse.baseUrl}}
+{{- if .Values.istio.enabled }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ include "backstage.fullname" . }}
+spec:
+  gateways:
+  {{- toYaml .Values.istio.gateways | nindent 2 }}
+  hosts:
+  - {{ $frontendUrl.host }}
+  http:
+  - match:
+    - uri:
+        prefix: /api
+    route:
+    - destination: 
+        host: {{ include "backend.serviceName" . }}
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: {{ $lighthouseUrl.path }}
+    rewrite:
+      uri: /
+    route:
+    - destination: 
+        host: {{ include "lighthouse.serviceName" . }}
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination: 
+        host: {{ include "frontend.serviceName" . }}
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ include "backstage.fullname" . }}-frontend
+spec:
+  host: {{ include "frontend.serviceName" . }}
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ include "backstage.fullname" . }}-backend
+spec:
+  host: {{ include "backend.serviceName" . }}
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ include "backstage.fullname" . }}-lighthouse
+spec:
+  host: {{ include "lighthouse.serviceName" . }}
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+{{- end }}
