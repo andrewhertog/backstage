@@ -1,0 +1,20 @@
+apiVersion: skaffold/v2beta9
+kind: Config
+metadata:
+  name: backstage
+build:
+  artifacts:
+  - image: docker-local-dev.jfrog.prodigygame.org/backstage
+    context: ../.
+    kaniko:
+      dockerfile: contrib/docker/multi-stage-frontend/Dockerfile
+  - image: docker-local-dev.jfrog.prodigygame.org/backstage-backend
+    context: .
+    sync:
+    kaniko:
+      dockerfile: packages/backend/Dockerfile
+  cluster:
+    annotations:
+      sidecar.istio.io/inject: "false"
+    dockerConfig: 
+      secretName: builder-config

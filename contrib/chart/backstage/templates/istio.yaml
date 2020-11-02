@@ -22,7 +22,7 @@ spec:
           number: 80
   - match:
     - uri:
-        prefix: {{ $lighthouseUrl.path }}
+        prefix: {{ $lighthouseUrl.path }}/
     rewrite:
       uri: /
     route:

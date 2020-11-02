@@ -1,0 +1,21 @@
+apiVersion: skaffold/v2beta9
+kind: Config
+metadata:
+  name: {{name}}
+build:
+  artifacts:
+  - image: docker-local-dev.jfrog.prodigygame.org/backstage
+    context: ../../../../contrib/docker/multi-stage-frontend
+    sync:
+      infer:
+    kaniko:
+      dockerfile: Dockerfile
+      cache: {}
+      buildArgs:
+        JFROG_USERNAME: '{{.JFROG_USERNAME}}'
+        JFROG_APIKEY: '{{.JFROG_APIKEY}}'
+  cluster:
+    annotations:
+      sidecar.istio.io/inject: "false"
+    dockerConfig: 
+      secretName: builder-config
